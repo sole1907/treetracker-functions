@@ -7,7 +7,7 @@ print(sys.path)
 
 class TestStringMethods(unittest.TestCase):
     def test_hello(self):
-        self.assertEqual(refresh_view.hello(), 'Hello, world!')
+        self.assertEqual(refresh_view.hello('Chen'), 'Hello, Chen!')
 
 # run test
 if __name__ == '__main__':
