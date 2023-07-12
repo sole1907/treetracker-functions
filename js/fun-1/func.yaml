@@ -1,0 +1,8 @@
+specVersion: 0.35.0
+name: fun-1
+runtime: node
+registry: dadiorchen
+image: docker.io/dadiorchen/fun-1:latest
+created: 2023-07-11T03:03:57.264079779Z
+build:
+  pvcSize: 256Mi
