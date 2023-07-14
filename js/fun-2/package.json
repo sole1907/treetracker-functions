@@ -1,0 +1,27 @@
+{
+  "name": "http-handler",
+  "version": "0.1.0",
+  "description": "A function which responds to HTTP requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "FUNC_LOG_LEVEL=info faas-js-runtime ./index.js",
+    "debug": "nodemon --inspect ./node_modules/faas-js-runtime/bin/cli.js ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@babel/core": "^7.22.9",
+    "@babel/preset-env": "^7.22.9",
+    "babel-jest": "^29.6.1",
+    "faas-js-runtime": "^1.1.0",
+    "jest": "^29.6.1",
+    "pg": "^8.11.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4",
+    "supertest": "^6.3.1"
+  },
+  "type": "module"
+}
