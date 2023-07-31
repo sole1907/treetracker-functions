@@ -18,5 +18,11 @@
     "nodemon": "^2.0.4",
     "supertest": "^6.3.1",
     "tape": "^5.0.1"
+  },
+  "jest": {
+    "transformIgnorePatterns": ["node_modules/(?!(sucrase)/)"],
+    "transform": {
+        "^.+\\.[t|j]sx?$": "babel-jest"
+      }
   }
 }
