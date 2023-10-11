@@ -3,7 +3,7 @@ import psycopg2
 
 
 
-def transfer_data(target,source, organization_id, action = False):
+def transfer_data(dest_conn,src_conn, organization_id, action = False):
     """
     Transfer organizations data and related planter, trees from source to target.
  
@@ -19,22 +19,10 @@ def transfer_data(target,source, organization_id, action = False):
     """
 
     #connect source database
-    src_conn = psycopg2.connect(source)
     src_cur = src_conn.cursor()
     org_name = organization_id
 
 
-
-    
-    if target != None:
-        dest_conn=psycopg2.connect(target)
-        
-    else:
-        local_user = "xyh"  # default PostgreSQL user
-        local_password = ""
-        local_host = "localhost"
-        local_port = "5432"
-        dest_conn=psycopg2.connect(dbname="greenstand", user=local_user, password=local_password, host=local_host, port=local_port)
     dest_cur = dest_conn.cursor()
 
     
@@ -131,12 +119,6 @@ def transfer_data(target,source, organization_id, action = False):
             if species_data:
                 species_columns = [desc[0] for desc in src_cur.description]
                 insert_or_update("tree_species", species_columns, [species_data],  dest_cur, dest_conn, action=action)
-
-    # #update trees with organizations directly -- but data missing?
-    # src_cur.execute("SELECT * FROM trees WHERE planting_organization_id = %s", (org_id,))
-    # trees_data = src_cur.fetchall()
-    # trees_columns = [desc[0] for desc in src_cur.description]
-    # insert_or_update("trees", trees_columns, trees_data, dest_cur, dest_conn)
 
     src_cur.close()
     dest_cur.close()
