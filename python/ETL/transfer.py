@@ -3,7 +3,7 @@ import psycopg2
 
 
 
-def transfer_data(dest_conn,src_conn, organization_id, action = False):
+def transfer(dest_conn,src_conn, organization_id, action = False):
     """
     Transfer organizations data and related planter, trees from source to target.
  
