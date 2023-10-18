@@ -1,5 +1,5 @@
 import unittest
-import transfer
+from transfer import transfer
 
 class Test_Transfer(unittest.TestCase):
     def test(self):
@@ -11,7 +11,6 @@ class Test_Transfer(unittest.TestCase):
         DB_SOURDE_URL = os.environ['DB_SOURDE_URL']
         DB_DESTINATION_URL  = os.environ[' DB_DESTINATION_URL ']
         
-        # need SRC DB_URL and TARGET DB_URL
         # need organization id
         print("DB_SOURDE_URL:", DB_SOURDE_URL)
         print("DB_DESTINATION_URL:",  DB_DESTINATION_URL)
