@@ -5,6 +5,7 @@ import psycopg2
 import pandas as pd
 import re
 from decimal import Decimal
+import sys
 
 load_dotenv(override=True)
 
@@ -37,6 +38,9 @@ dbtwo_config = {
     "user": dest_db_user,
     "password": dest_db_password
 }
+
+sched = BlockingScheduler()
+iterations = 0
 
 #function to read properties file as a json object
 def read_properties_file(file_path):
@@ -239,6 +243,7 @@ def process_organizations(loaded_properties, batch_size):
     print("Processing organizations")
     # comma-separated organization IDs
     organization_ids = loaded_properties.get("organization_ids")
+
     # Split the comma-separated IDs into a list
     organization_ids_list = ",".join(organization_ids.split(","))
 
@@ -320,19 +325,35 @@ def process_trees(loaded_properties, batch_size):
             
     print(f"process tree iterations done")
 
+def track_iterations(max_iterations):
+    global iterations
+
+    iterations += 1
+    if iterations >= max_iterations:
+        print(f"job has now run {iterations} times and is shutting down")
+        sched.shutdown(wait=False)
+        raise sys.exit()
+
+
 def scheduled_job():
     print("Migration job running")
     
     batch_size = loaded_properties.get("query_batch_size")
+    max_iterations = int(loaded_properties.get("max_iterations"))
+
     process_organizations(loaded_properties, batch_size)
     process_planters(loaded_properties, batch_size)
     process_trees(loaded_properties, batch_size)
+    if max_iterations > 0:
+        track_iterations(max_iterations)
     
 
 if __name__ == "__main__":
     print("Starting scheduler...")
 
-    sched = BlockingScheduler()
-    sched.add_job(scheduled_job, "interval", seconds=int(loaded_properties.get("job_interval_seconds")))
-    sched.start()
-
+    try:
+        sched.add_job(scheduled_job, "interval", max_instances=1, seconds=int(loaded_properties.get("job_interval_seconds")))
+        sched.start()
+    except Exception as e:
+        print(f"Error: {e}")
+        raise SystemExit("Exiting due to the error above")

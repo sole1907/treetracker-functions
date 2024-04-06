@@ -35,6 +35,8 @@ DEST_DB_PASSWORD=mypassword
 ```
 # here job is scheduled to run every 24 hours, set value to preferred frequency
 job_interval_seconds=86400
+# number of iterations to run (0) means to run continuously, unless manually stopped
+max_iterations=0
 # set batch size for each run, 1000 here means a limit of 1000 records per batch of query
 query_batch_size=1000
 # list of organization_ids separated by commas
