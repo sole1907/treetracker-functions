@@ -32,7 +32,11 @@ DEST_DB_PASSWORD=mypassword
 
 ## Update config.properties file
 
+### Parsing the config file makes use of configparser, so the square brackets such as [job] represents sections and should not be deleted. In case you are commenting a part of a key/value pair, makes ure to leave a space before. e,g: key=1,23 #456
+
 ```
+#section name job - job configs
+[job]
 # here job is scheduled to run every 24 hours, set value to preferred frequency
 job_interval_seconds=86400
 # number of iterations to run (0) means to run continuously, unless manually stopped
@@ -42,8 +46,15 @@ query_batch_size=1000
 # list of organization_ids separated by commas
 organization_ids=15,1,13,14,2,3,4,5,6,30,31,32,11
 
-#queries ...
+#section name queries
+[queries]
 list of queries being run for data migration
+#[columns] will be replaced by list of columns specified in columns section below
+organization_query = select [columns] from table
+
+#section name columns: columns to migrate
+[columns]
+list of columns to migrate for each query
 ```
 
 ## Activate Environment Variables:

@@ -6,6 +6,7 @@ import pandas as pd
 import re
 from decimal import Decimal
 import sys
+import configparser
 
 load_dotenv(override=True)
 
@@ -44,17 +45,10 @@ iterations = 0
 
 #function to read properties file as a json object
 def read_properties_file(file_path):
-    properties = {}
-    try:
-        with open(file_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    key, value = line.split('=', 1)
-                    properties[key.strip()] = value.strip()
-    except FileNotFoundError:
-        print(f"File {file_path} not found.")
-    return properties
+    config = configparser.ConfigParser(inline_comment_prefixes=('#'), interpolation=None)
+    config.read(file_path)
+
+    return config
 
 print("Loading properties...")
 # load properties
@@ -242,23 +236,25 @@ def process_data(parsed_query, columns):
 def process_organizations(loaded_properties, batch_size):
     print("Processing organizations")
     # comma-separated organization IDs
-    organization_ids = loaded_properties.get("organization_ids")
+    organization_ids = loaded_properties["job"]["organization_ids"]
 
     # Split the comma-separated IDs into a list
     organization_ids_list = ",".join(organization_ids.split(","))
 
     # Organization List SQL query
-    organization_query = loaded_properties.get("organization_query")
-
-    columns = ["id", "type", "name", "first_name", "last_name", "email", "phone", "pwd_reset_required", "website", 
-               "wallet", "password", "salt", "active_contract_id", "offering_pay_to_plant", "tree_validation_contract_id", 
-               "logo_url", "map_name", "stakeholder_uuid"]
-
+    organization_query = loaded_properties["queries"]["organization_query"]
+    columns_str = re.sub(r'\s+', '', loaded_properties["columns"]["organization_columns"])
+    # Remove the table name and keep only the column names
+    columns_arr = [col.split(".")[1] for col in columns_str.split(",")]
+    
     last_processed_id = 0
     while last_processed_id > -1:
         parsed_query = organization_query % (last_processed_id, organization_ids_list, batch_size)
+        # Replace the placeholder with the new string
+        parsed_query = parsed_query.replace("[columns]", columns_str)
+    
         # Process data & update the last processed ID
-        last_processed_id = process_data(parsed_query, columns)
+        last_processed_id = process_data(parsed_query, columns_arr)
         if last_processed_id is None:
             print("entity: something went wrong so I could not get last processed record")
             break
@@ -270,21 +266,24 @@ def process_organizations(loaded_properties, batch_size):
 def process_planters(loaded_properties, batch_size):
     print("Processing planters")
     # comma-separated organization IDs
-    organization_ids = loaded_properties.get("organization_ids")
+    organization_ids = loaded_properties["job"]["organization_ids"]
     # Split the comma-separated IDs into a list
     organization_ids_list = ",".join(organization_ids.split(","))
 
     # Planter List SQL query
-    planter_query = loaded_properties.get("planter_query")
-
-    columns = ["id", "first_name", "last_name", "email", "organization", "phone", "pwd_reset_required", "image_url", 
-               "person_id", "organization_id", "image_rotation", "gender", "grower_account_uuid"]
+    planter_query = loaded_properties["queries"]["planter_query"]
+    columns_str = re.sub(r'\s+', '', loaded_properties["columns"]["planter_columns"])
+    # Remove the table name and keep only the column names
+    columns_arr = [col.split(".")[1] for col in columns_str.split(",")]
 
     last_processed_id = 0
     while last_processed_id > -1:
         parsed_query = planter_query % (last_processed_id, organization_ids_list, batch_size)
+        # Replace the placeholder with the new string
+        parsed_query = parsed_query.replace("[columns]", columns_str)
+
         # Process data & update the last processed ID
-        last_processed_id = process_data(parsed_query, columns)
+        last_processed_id = process_data(parsed_query, columns_arr)
         if last_processed_id is None:
             print("planter: something went wrong so I could not get last processed record")
             break
@@ -295,28 +294,25 @@ def process_planters(loaded_properties, batch_size):
 def process_trees(loaded_properties, batch_size):
     print("Processing trees")
     # comma-separated organization IDs
-    organization_ids = loaded_properties.get("organization_ids")
+    organization_ids = loaded_properties["job"]["organization_ids"]
     # Split the comma-separated IDs into a list
     organization_ids_list = ",".join(organization_ids.split(","))
 
     # Planter List SQL query
-    tree_query = loaded_properties.get("tree_query")
+    tree_query = loaded_properties["queries"]["tree_query"]
+    columns_str = re.sub(r'\s+', '', loaded_properties["columns"]["tree_columns"])
+    # Remove the table name and keep only the column names
+    columns_arr = [col.split(".")[1] for col in columns_str.split(",")]
 
-    columns = ["id", "time_created", "time_updated", "missing", "priority", "cause_of_death_id", "planter_id", 
-               "primary_location_id", "settings_id", "override_settings_id", "dead", "photo_id", "image_url", 
-               "certificate_id", "estimated_geometric_location", "lat", "lon", "gps_accuracy", "active", 
-               "planter_photo_url", "planter_identifier", "device_id", "sequence", "note", "verified", "uuid", "approved", 
-               "status", "cluster_regions_assigned", "species_id", "planting_organization_id", "payment_id", 
-               "contract_id", "token_issued", "morphology", "age", "species", "capture_approval_tag", "rejection_reason", 
-               "matching_hash", "device_identifier", "images", "domain_specific_data", "token_id", "name", "earnings_id", 
-               "session_id"]
 
     last_processed_id = 0
     while last_processed_id > -1:
         parsed_query = tree_query % (last_processed_id, organization_ids_list, batch_size)
-        
+        # Replace the placeholder with the new string
+        parsed_query = parsed_query.replace("[columns]", columns_str)
+
         # Process data & update the last processed ID
-        last_processed_id = process_data(parsed_query, columns)
+        last_processed_id = process_data(parsed_query, columns_arr)
         if last_processed_id is None:
             print("tree: something went wrong so I could not get last processed record")
             break
@@ -338,8 +334,8 @@ def track_iterations(max_iterations):
 def scheduled_job():
     print("Migration job running")
     
-    batch_size = loaded_properties.get("query_batch_size")
-    max_iterations = int(loaded_properties.get("max_iterations"))
+    batch_size = loaded_properties["job"]["query_batch_size"]
+    max_iterations = int(loaded_properties["job"]["max_iterations"])
 
     process_organizations(loaded_properties, batch_size)
     process_planters(loaded_properties, batch_size)
@@ -352,7 +348,7 @@ if __name__ == "__main__":
     print("Starting scheduler...")
 
     try:
-        sched.add_job(scheduled_job, "interval", max_instances=1, seconds=int(loaded_properties.get("job_interval_seconds")))
+        sched.add_job(scheduled_job, "interval", max_instances=1, seconds=int(loaded_properties["job"]["job_interval_seconds"]))
         sched.start()
     except Exception as e:
         print(f"Error: {e}")
